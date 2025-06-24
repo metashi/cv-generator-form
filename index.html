@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator CV - Formularz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 30px;
+            height: 30px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .dynamic-section {
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .add-button {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .add-button:hover {
+            background: #27ae60;
+        }
+
+        .remove-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .remove-button:hover {
+            background: #c0392b;
+        }
+
+        .submit-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .submit-button {
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .submit-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .config-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .endpoint-config {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .endpoint-input {
+            flex: 1;
+        }
+
+        .test-button {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .chip {
+            display: inline-block;
+            background: #ecf0f1;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin: 2px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+
+        .skill-input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .skill-input {
+            flex: 1;
+        }
+
+        .add-skill-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .endpoint-config {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Generator CV AI</h1>
+            <p>Wypełnij formularz i wygeneruj profesjonalne CV</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Konfiguracja endpoint'u -->
+        <div class="config-section">
+            <h3>⚙️ Konfiguracja n8n</h3>
+            <div class="endpoint-config">
+                <input 
+                    type="text" 
+                    id="webhookUrl" 
+                    placeholder="https://twoj-n8n.com/webhook/cv-generator"
+                    value="https://n8n.example.com/webhook/cv-generator"
+                    class="endpoint-input"
+                >
+                <button onclick="testConnection()" class="test-button">Test połączenia</button>
+            </div>
+        </div>
+
+        <form id="cvForm">
+            <!-- Dane osobowe -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">👤</div>
+                    Dane osobowe
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="imie">Imię <span class="required">*</span></label>
+                        <input type="text" id="imie" name="imie" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nazwisko">Nazwisko <span class="required">*</span></label>
+                        <input type="text" id="nazwisko" name="nazwisko" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefon">Telefon <span class="required">*</span></label>
+                        <input type="tel" id="telefon" name="telefon" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="adres">Adres</label>
+                        <input type="text" id="adres" name="adres" placeholder="ul. Przykładowa 123, 00-001 Warszawa">
+                    </div>
+                    <div class="form-group">
+                        <label for="linkedin">LinkedIn</label>
+                        <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/twojprofil">
+                    </div>
+                    <div class="form-group">
+                        <label for="github">GitHub</label>
+                        <input type="url" id="github" name="github" placeholder="https://github.com/twojprofil">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cel zawodowy -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🎯</div>
+                    Cel zawodowy
+                </div>
+                <div class="form-group">
+                    <label for="cel">Opisz swój cel zawodowy</label>
+                    <textarea id="cel" name="cel" placeholder="Poszukuję pozycji gdzie będę mógł wykorzystać swoje umiejętności..."></textarea>
+                </div>
+            </div>
+
+            <!-- Doświadczenie zawodowe -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">💼</div>
+                    Doświadczenie zawodowe
+                </div>
+                <div id="experienceContainer">
+                    <!-- Dynamicznie dodawane doświadczenia -->
+                </div>
+                <button type="button" onclick="addExperience()" class="add-button">+ Dodaj doświadczenie</button>
+            </div>
+
+            <!-- Wykształcenie -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🎓</div>
+                    Wykształcenie
+                </div>
+                <div id="educationContainer">
+                    <!-- Dynamicznie dodawane wykształcenie -->
+                </div>
+                <button type="button" onclick="addEducation()" class="add-button">+ Dodaj wykształcenie</button>
+            </div>
+
+            <!-- Umiejętności -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🛠️</div>
+                    Umiejętności
+                </div>
+                
+                <div class="form-group">
+                    <label>Umiejętności techniczne</label>
+                    <div class="skill-input-container">
+                        <input type="text" id="newTechnicalSkill" class="skill-input" placeholder="np. JavaScript, React, Python">
+                        <button type="button" onclick="addSkill('technical')" class="add-skill-btn">Dodaj</button>
+                    </div>
+                    <div id="technicalSkills" class="skills-container"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Umiejętności językowe</label>
+                    <div class="skill-input-container">
+                        <input type="text" id="newLanguageSkill" class="skill-input" placeholder="np. Angielski - B2, Niemiecki - A1">
+                        <button type="button" onclick="addSkill('language')" class="add-skill-btn">Dodaj</button>
+                    </div>
+                    <div id="languageSkills" class="skills-container"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Umiejętności dodatkowe</label>
+                    <div class="skill-input-container">
+                        <input type="text" id="newAdditionalSkill" class="skill-input" placeholder="np. Zarządzanie zespołem, Agile/Scrum">
+                        <button type="button" onclick="addSkill('additional')" class="add-skill-btn">Dodaj</button>
+                    </div>
+                    <div id="additionalSkills" class="skills-container"></div>
+                </div>
+            </div>
+
+            <!-- Projekty -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🚀</div>
+                    Projekty
+                </div>
+                <div id="projectsContainer">
+                    <!-- Dynamicznie dodawane projekty -->
+                </div>
+                <button type="button" onclick="addProject()" class="add-button">+ Dodaj projekt</button>
+            </div>
+
+            <!-- Certyfikaty -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🏆</div>
+                    Certyfikaty
+                </div>
+                <div id="certificatesContainer">
+                    <!-- Dynamicznie dodawane certyfikaty -->
+                </div>
+                <button type="button" onclick="addCertificate()" class="add-button">+ Dodaj certyfikat</button>
+            </div>
+
+            <!-- Preferencje -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">⚙️</div>
+                    Preferencje CV
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="branza">Branża</label>
+                        <select id="branza" name="branza">
+                            <option value="ogólna">Ogólna</option>
+                            <option value="IT/Technology">IT/Technology</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Sales">Sales</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="poziom">Poziom doświadczenia</label>
+                        <select id="poziom" name="poziom">
+                            <option value="junior">Junior</option>
+                            <option value="mid">Mid</option>
+                            <option value="senior">Senior</option>
+                            <option value="manager">Manager</option>
+                            <option value="executive">Executive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="styl">Styl CV</label>
+                        <select id="styl" name="styl">
+                            <option value="profesjonalny">Profesjonalny</option>
+                            <option value="nowoczesny">Nowoczesny</option>
+                            <option value="minimalistyczny">Minimalistyczny</option>
+                            <option value="kreatywny">Kreatywny</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="jezyk">Język</label>
+                        <select id="jezyk" name="jezyk">
+                            <option value="polski">Polski</option>
+                            <option value="english">English</option>
+                            <option value="niemiecki">Deutsch</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Przycisk submit -->
+            <div class="submit-section">
+                <button type="submit" class="submit-button" id="submitButton">
+                    🚀 Wygeneruj CV
+                </button>
+            </div>
+        </form>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generuję Twoje CV... To może potrwać chwilę.</p>
+        </div>
+
+        <!-- Wyniki -->
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        // Globalne zmienne
+        let skills = {
+            technical: [],
+            language: [],
+            additional: []
+        };
+
+        // Inicjalizacja
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            addExperience(); // Dodaj pierwsze pole doświadczenia
+            addEducation(); // Dodaj pierwsze pole wykształcenia
+        });
+
+        // Progress bar
+        function updateProgress() {
+            const form = document.getElementById('cvForm');
+            const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+            const filled = Array.from(inputs).filter(input => input.value.trim() !== '').length;
+            const progress = (filled / inputs.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Event listeners dla progress
+        document.getElementById('cvForm').addEventListener('input', updateProgress);
+        document.getElementById('cvForm').addEventListener('change', updateProgress);
+
+        // Funkcje dodawania sekcji
+        function addExperience() {
+            const container = document.getElementById('experienceContainer');
+            const index = container.children.length;
+            
+            const experienceDiv = document.createElement('div');
+            experienceDiv.className = 'dynamic-section';
+            experienceDiv.innerHTML = `
+                <button type="button" onclick="removeSection(this)" class="remove-button">×</button>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Stanowisko</label>
+                        <input type="text" name="exp_stanowisko_${index}" placeholder="np. Frontend Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Firma</label>
+                        <input type="text" name="exp_firma_${index}" placeholder="np. TechCorp Sp. z o.o.">
+                    </div>
+                    <div class="form-group">
+                        <label>Okres</label>
+                        <input type="text" name="exp_okres_${index}" placeholder="np. 2020-01 - obecnie">
+                    </div>
+                    <div class="form-group">
+                        <label>Lokalizacja</label>
+                        <input type="text" name="exp_lokalizacja_${index}" placeholder="np. Warszawa, zdalna">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Opis obowiązków</label>
+                        <textarea name="exp_opis_${index}" placeholder="Opisz swoje główne obowiązki i odpowiedzialności..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Osiągnięcia (oddziel przecinkami)</label>
+                        <textarea name="exp_osiagniecia_${index}" placeholder="np. Zwiększenie wydajności o 40%, Wdrożenie CI/CD pipeline"></textarea>
+                    </div>
+                </div>
+            `;
+            container.appendChild(experienceDiv);
+        }
+
+        function addEducation() {
+            const container = document.getElementById('educationContainer');
+            const index = container.children.length;
+            
+            const educationDiv = document.createElement('div');
+            educationDiv.className = 'dynamic-section';
+            educationDiv.innerHTML = `
+                <button type="button" onclick="removeSection(this)" class="remove-button">×</button>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Kierunek</label>
+                        <input type="text" name="edu_kierunek_${index}" placeholder="np. Informatyka">
+                    </div>
+                    <div class="form-group">
+                        <label>Uczelnia</label>
+                        <input type="text" name="edu_uczelnia_${index}" placeholder="np. Politechnika Warszawska">
+                    </div>
+                    <div class="form-group">
+                        <label>Rok ukończenia</label>
+                        <input type="number" name="edu_rok_${index}" placeholder="2020" min="1950" max="2030">
+                    </div>
+                    <div class="form-group">
+                        <label>Stopień</label>
+                        <select name="edu_stopien_${index}">
+                            <option value="">Wybierz stopień</option>
+                            <option value="Licencjat">Licencjat</option>
+                            <option value="Inżynier">Inżynier</option>
+                            <option value="Magister">Magister</option>
+                            <option value="Doktor">Doktor</option>
+                            <option value="Technikum">Technikum</option>
+                            <option value="Matura">Matura</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            container.appendChild(educationDiv);
+        }
+
+        function addProject() {
+            const container = document.getElementById('projectsContainer');
+            const index = container.children.length;
+            
+            const projectDiv = document.createElement('div');
+            projectDiv.className = 'dynamic-section';
+            projectDiv.innerHTML = `
+                <button type="button" onclick="removeSection(this)" class="remove-button">×</button>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nazwa projektu</label>
+                        <input type="text" name="proj_nazwa_${index}" placeholder="np. E-commerce Platform">
+                    </div>
+                    <div class="form-group">
+                        <label>Link</label>
+                        <input type="url" name="proj_link_${index}" placeholder="https://github.com/user/project">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Opis projektu</label>
+                        <textarea name="proj_opis_${index}" placeholder="Opisz projekt, jego cele i Twój wkład..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Technologie (oddziel przecinkami)</label>
+                        <input type="text" name="proj_technologie_${index}" placeholder="React, Node.js, PostgreSQL, AWS">
+                    </div>
+                </div>
+            `;
+            container.appendChild(projectDiv);
+        }
+
+        function addCertificate() {
+            const container = document.getElementById('certificatesContainer');
+            const index = container.children.length;
+            
+            const certDiv = document.createElement('div');
+            certDiv.className = 'dynamic-section';
+            certDiv.innerHTML = `
+                <button type="button" onclick="removeSection(this)" class="remove-button">×</button>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nazwa certyfikatu</label>
+                        <input type="text" name="cert_nazwa_${index}" placeholder="np. AWS Certified Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Organizacja</label>
+                        <input type="text" name="cert_organizacja_${index}" placeholder="np. Amazon Web Services">
+                    </div>
+                    <div class="form-group">
+                        <label>Data uzyskania</label>
+                        <input type="month" name="cert_data_${index}">
+                    </div>
+                    <div class="form-group">
+                        <label>Link do certyfikatu</label>
+                        <input type="url" name="cert_link_${index}" placeholder="https://link-do-certyfikatu.com">
+                    </div>
+                </div>
+            `;
+            container.appendChild(certDiv);
+        }
+
+        function removeSection(button) {
+            button.parentElement.remove();
+            updateProgress();
+        }
+
+        // Zarządzanie umiejętnościami
+        function addSkill(type) {
+            const input = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Skill`);
+            const skill = input.value.trim();
+            
+            if (skill && !skills[type].includes(skill)) {
+                skills[type].push(skill);
+                input.value = '';
+                renderSkills(type);
+            }
+        }
+
+        function removeSkill(type, skill) {
+            skills[type] = skills[type].filter(s => s !== skill);
+            renderSkills(type);
+        }
+
+        function renderSkills(type) {
+            const container = document.getElementById(`${type}Skills`);
+            container.innerHTML = skills[type].map(skill => 
+                `<span class="chip">${skill} <span onclick="removeSkill('${type}', '${skill}')" style="cursor: pointer; margin-left: 5px;">×</span></span>`
+            ).join('');
+        }
+
+        // Enter key dla umiejętności
+        ['technical', 'language', 'additional'].forEach(type => {
+            document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Skill`)
+                .addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSkill(type);
+                    }
+                });
+        });
+
+        // Test połączenia
+        async function testConnection() {
+            const url = document.getElementById('webhookUrl').value;
+            if (!url) {
+                alert('Wprowadź URL webhook\'a n8n');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        test: true,
+                        imie: 'Test',
+                        nazwisko: 'Connection',
+                        email: 'test@example.com',
+                        telefon: '+48 123 456 789'
+                    })
+                });
+
+                if (response.ok) {
+                    alert('✅ Połączenie działa!');
+                } else {
+                    alert('❌ Błąd połączenia: ' + response.status);
+                }
+            } catch (error) {
+                alert('❌ Błąd: ' + error.message);
+            }
+        }
+
+        // Zbieranie danych z formularza
+        function collectFormData() {
+            const formData = new FormData(document.getElementById('cvForm'));
+            const data = {};
+
+            // Podstawowe dane
+            for (let [key, value] of formData.entries()) {
+                if (!key.includes('_')) {
+                    data[key] = value;
+                }
+            }
+
+            // Doświadczenie
+            data.doswiadczenie = [];
+            const expCount = document.getElementById('experienceContainer').children.length;
+            for (let i = 0; i < expCount; i++) {
+                const exp = {};
+                const stanowisko = formData.get(`exp_stanowisko_${i}`);
+                if (stanowisko) {
+                    exp.stanowisko = stanowisko;
+                    exp.firma = formData.get(`exp_firma_${i}`) || '';
+                    exp.okres = formData.get(`exp_okres_${i}`) || '';
+                    exp.lokalizacja = formData.get(`exp_lokalizacja_${i}`) || '';
+                    exp.opis = formData.get(`exp_opis_${i}`) || '';
+                    const osiagniecia = formData.get(`exp_osiagniecia_${i}`);
+                    exp.osiagniecia = osiagniecia ? osiagniecia.split(',').map(s => s.trim()) : [];
+                    data.doswiadczenie.push(exp);
+                }
+            }
+
+            // Wykształcenie
+            data.wyksztalcenie
