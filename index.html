@@ -302,6 +302,26 @@
             cursor: pointer;
         }
 
+        .cv-preview {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -335,8 +355,8 @@
                 <input 
                     type="text" 
                     id="webhookUrl" 
-                    placeholder="https://twoj-n8n.com/webhook/cv-generator"
-                    value="https://n8n.example.com/webhook/cv-generator"
+                    placeholder="https://metashi.app.n8n.cloud/webhook-test/cv-generator"
+                    value="https://metashi.app.n8n.cloud/webhook-test/cv-generator"
                     class="endpoint-input"
                 >
                 <button onclick="testConnection()" class="test-button">Test połączenia</button>
@@ -811,4 +831,162 @@
             }
 
             // Wykształcenie
-            data.wyksztalcenie
+            data.wyksztalcenie = [];
+            const eduCount = document.getElementById('educationContainer').children.length;
+            for (let i = 0; i < eduCount; i++) {
+                const kierunek = formData.get(`edu_kierunek_${i}`);
+                if (kierunek) {
+                    data.wyksztalcenie.push({
+                        kierunek: kierunek,
+                        uczelnia: formData.get(`edu_uczelnia_${i}`) || '',
+                        rok: formData.get(`edu_rok_${i}`) || '',
+                        stopien: formData.get(`edu_stopien_${i}`) || ''
+                    });
+                }
+            }
+
+            // Projekty
+            data.projekty = [];
+            const projCount = document.getElementById('projectsContainer').children.length;
+            for (let i = 0; i < projCount; i++) {
+                const nazwa = formData.get(`proj_nazwa_${i}`);
+                if (nazwa) {
+                    const proj = {
+                        nazwa: nazwa,
+                        opis: formData.get(`proj_opis_${i}`) || '',
+                        link: formData.get(`proj_link_${i}`) || '',
+                        technologie: []
+                    };
+                    
+                    const techText = formData.get(`proj_technologie_${i}`);
+                    if (techText) {
+                        proj.technologie = techText.split(',').map(s => s.trim()).filter(s => s);
+                    }
+                    
+                    data.projekty.push(proj);
+                }
+            }
+
+            // Certyfikaty
+            data.certyfikaty = [];
+            const certCount = document.getElementById('certificatesContainer').children.length;
+            for (let i = 0; i < certCount; i++) {
+                const nazwa = formData.get(`cert_nazwa_${i}`);
+                if (nazwa) {
+                    data.certyfikaty.push({
+                        nazwa: nazwa,
+                        organizacja: formData.get(`cert_organizacja_${i}`) || '',
+                        data: formData.get(`cert_data_${i}`) || '',
+                        link: formData.get(`cert_link_${i}`) || ''
+                    });
+                }
+            }
+
+            // Umiejętności z globalnej zmiennej skills
+            data.umiejetnosciTechniczne = skills.technical || [];
+            data.umiejetnosciJezykowe = skills.language || [];
+            data.umiejetnosciDodatkowe = skills.additional || [];
+
+            // Preferencje
+            data.branza = formData.get('branza') || 'ogólna';
+            data.poziom = formData.get('poziom') || 'mid';
+            data.styl = formData.get('styl') || 'profesjonalny';
+            data.jezyk = formData.get('jezyk') || 'polski';
+
+            // Cel zawodowy
+            data.cel = formData.get('cel') || '';
+
+            console.log('📋 Zebrane dane dla n8n:', data);
+            return data;
+        }
+
+        // Obsługa wysyłania formularza
+        document.getElementById('cvForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submitButton');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            // Pokaż loading
+            submitButton.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            
+            try {
+                // Zbierz dane z formularza
+                const formData = collectFormData();
+                
+                console.log('📤 Wysyłam dane do n8n:', formData);
+                
+                // Wyślij do n8n
+                const webhookUrl = document.getElementById('webhookUrl').value;
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const responseData = await response.json();
+                
+                if (response.ok && responseData.success) {
+                    // Sukces
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>✅ CV zostało wygenerowane!</h3>
+                        <p><strong>Kandydat:</strong> ${responseData.data.candidateName}</p>
+                        <p><strong>Plik:</strong> ${responseData.data.fileName}</p>
+                        <p><strong>Data:</strong> ${new Date(responseData.data.generatedAt).toLocaleString('pl-PL')}</p>
+                        <hr style="margin: 15px 0;">
+                        <div class="cv-preview">
+                            ${responseData.data.html}
+                        </div>
+                        <hr style="margin: 15px 0;">
+                        <button onclick="downloadCV('${responseData.data.fileName}', \`${responseData.data.html.replace(/`/g, '\\`')}\`)" 
+                                class="download-btn">
+                            💾 Pobierz CV
+                        </button>
+                    `;
+                } else {
+                    // Błąd
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>❌ Błąd generowania CV</h3>
+                        <p><strong>Komunikat:</strong> ${responseData.message || 'Nieznany błąd'}</p>
+                        ${responseData.missingFields ? `<p><strong>Brakujące pola:</strong> ${responseData.missingFields.join(', ')}</p>` : ''}
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ Błąd:', error);
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Błąd połączenia</h3>
+                    <p><strong>Szczegóły:</strong> ${error.message}</p>
+                    <p>Sprawdź URL n8n i połączenie internetowe.</p>
+                `;
+            } finally {
+                // Ukryj loading
+                submitButton.disabled = false;
+                loading.style.display = 'none';
+                result.style.display = 'block';
+            }
+        });
+
+        // Funkcja pobierania CV
+        function downloadCV(fileName, htmlContent) {
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
